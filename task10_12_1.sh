@@ -90,7 +90,7 @@ mkdir -vp /var/lib/libvirt/images/$VM1_NAME
 mkdir -vp /var/lib/libvirt/images/$VM2_NAME
 
 echo "Deleting base image..."
-rm -v $VM_BASE_IMAGE
+rm -v /var/lib/libvirt/images/xenial-server-cloudimg-amd64-disk1.img
 
 echo "Downloading base image:"
 wget -O /var/lib/libvirt/images/xenial-server-cloudimg-amd64-disk1.img $VM_BASE_IMAGE
@@ -100,7 +100,7 @@ cp -v /var/lib/libvirt/images/xenial-server-cloudimg-amd64-disk1.img $VM1_HDD
 cp -v /var/lib/libvirt/images/xenial-server-cloudimg-amd64-disk1.img $VM2_HDD
 
 echo "Generate MAC adress for VM1 external network"
-VM1_EXTERNAL_MAC=$(52:54:00:`(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{6}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;'`)
+VM1_EXTERNAL_MAC=52:54:00:`(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{6}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;'`
 echo "VM1_EXTERNAL_MAC: $VM1_EXTERNAL_MAC"
 
 echo "Check if SSH key exists"
