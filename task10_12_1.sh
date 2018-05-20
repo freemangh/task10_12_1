@@ -16,9 +16,9 @@ set -o allexport
 source $CONFIGFILE
 set +o allexport
 #Normalization
-EXTERNAL_IF=$(echo $EXTERNAL_IF | tr -d \'\"\”,)
-INTERNAL_IF=$(echo $INTERNAL_IF | tr -d \'\"\”,)
-MANAGEMENT_IF=$(echo $MANAGEMENT_IF | tr -d \'\"\”,)
+#EXTERNAL_IF=$(echo $EXTERNAL_IF | tr -d \'\"\”,)
+#INTERNAL_IF=$(echo $INTERNAL_IF | tr -d \'\"\”,)
+#MANAGEMENT_IF=$(echo $MANAGEMENT_IF | tr -d \'\"\”,)
 echo "===CONFIG START===
 SCRPATH: $SCRPATH
 CONFIGFILE: $CONFIGFILE
@@ -80,6 +80,8 @@ VM2_MANAGEMENT_IF: $VM2_MANAGEMENT_IF
 VM2_INTERNAL_IP: $VM2_INTERNAL_IP
 VM2_MANAGEMENT_IP: $VM2_MANAGEMENT_IP
 VM2_VXLAN_IP: $VM2_VXLAN_IP
-
 ===CONFIG END==="
 
+echo "Creating config-drives directories:"
+mkdir -vp config-drives/$VM1_NAME-config
+mkdir -vp config-drives/$VM2_NAME-config
