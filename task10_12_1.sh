@@ -306,7 +306,7 @@ echo "<domain type='${VM_VIRT_TYPE}'>
 		</console>
 		<graphics type='vnc' port='-1' autoport='yes'/>
 	</devices>
-</domain>" > $SCRPATHvm1.xml
+</domain>" > $SCRPATH'vm1.xml'
 #---<END: VM1 config template>---
 #---<START: VM2 config template>---
 echo "<domain type='${VM_VIRT_TYPE}'>
@@ -351,9 +351,17 @@ echo "<domain type='${VM_VIRT_TYPE}'>
 		</console>
 		<graphics type='vnc' port='-1' autoport='yes'/>
 	</devices>
-</domain>" > $SCRPATHvm2.xml
+</domain>" > $SCRPATH'vm2.xml'
 #---<END: VM2 config template>---
 
-echo "Creating config-drives"
+echo "Creating config-drives..."
 mkisofs -o "$VM1_CONFIG_ISO" -V cidata -r -J $SCRPATH'config-drives/vm1-config'
 genisoimage -output "$VM2_CONFIG_ISO" -volid cidata -joliet -rock $SCRPATH'config-drives/vm2-config'
+
+#echo "Defining VMs from XMLs..."
+#virsh define $SCRPATH'vm1.xml'
+#virsh define $SCRPATH'vm2.xml'
+#
+#echo "Starting VMs..."
+#virsh start vm1
+#virsh start vm2
