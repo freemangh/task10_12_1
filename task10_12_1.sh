@@ -82,6 +82,32 @@ VM2_MANAGEMENT_IP: $VM2_MANAGEMENT_IP
 VM2_VXLAN_IP: $VM2_VXLAN_IP
 ===CONFIG END==="
 
-echo "Creating config-drives directories:"
+echo "Creating all necessary directories:"
 mkdir -vp config-drives/$VM1_NAME-config
 mkdir -vp config-drives/$VM2_NAME-config
+mkdir -vp networks
+mkdir -vp /var/lib/libvirt/images/$VM1_NAME
+mkdir -vp /var/lib/libvirt/images/$VM2_NAME
+
+echo "Deleting base image..."
+rm -v $VM_BASE_IMAGE
+
+echo "Downloading base image:"
+wget -O /var/lib/libvirt/images/xenial-server-cloudimg-amd64-disk1.img $VM_BASE_IMAGE
+
+echo "Copying from base image to VMs HDD:"
+cp -v /var/lib/libvirt/images/xenial-server-cloudimg-amd64-disk1.img $VM1_HDD
+cp -v /var/lib/libvirt/images/xenial-server-cloudimg-amd64-disk1.img $VM2_HDD
+
+echo "Generate MAC adress for VM1 external network"
+VM1_EXTERNAL_MAC=$(52:54:00:`(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{6}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;'`)
+echo "VM1_EXTERNAL_MAC: $VM1_EXTERNAL_MAC"
+
+echo "Check if SSH key exists"
+if [ -e $SSH_PUB_KEY ]
+then 
+	echo "SSH key exists"
+else
+	echo "SSH key doesn't exists"
+        exit 1
+fi
