@@ -82,6 +82,7 @@ VM2_MANAGEMENT_IP: $VM2_MANAGEMENT_IP
 VM2_VXLAN_IP: $VM2_VXLAN_IP
 ===CONFIG END==="
 
+echo "Step 1: Inviroment prepearing..."
 echo "Creating all necessary directories:"
 mkdir -vp config-drives/$VM1_NAME-config
 mkdir -vp config-drives/$VM2_NAME-config
@@ -103,11 +104,101 @@ echo "Generate MAC adress for VM1 external network"
 VM1_EXTERNAL_MAC=52:54:00:`(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{6}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;'`
 echo "VM1_EXTERNAL_MAC: $VM1_EXTERNAL_MAC"
 
-echo "Check if SSH key exists"
+echo "Checking that SSH key exists:"
 if [ -e $SSH_PUB_KEY ]
 then 
 	echo "Key exists, all Ok!"
 else
 	echo "SSH key doesn't exists, creating it..."
-        ssh-keygen -t rsa -b 2048 -C "khvastunov@gmail.com" -f $HOME/.ssh/id_rsa
+        ssh-keygen -t rsa -b 2048 -C "khvastunov@gmail.com" -f $HOME/.ssh/id_rsa -q N \"\"
 fi
+
+echo "Creating external.xml..."
+#---<START: External network template>---
+echo"<network>
+	<name>${EXTERNAL_NET_NAME}</name>
+		<forward mode='nat'>
+			<nat>
+				<port start='1024' end='65535'/>
+			</nat>
+		</forward>
+	<ip address='$EXTERNAL_NET_HOST_IP' netmask='$EXTERNAL_NET_MASK'>
+		<dhcp>
+			<range start='$EXTERNAL_NET.2' end='$EXTERNAL_NET.254'/>
+			<host mac='$VM1_EXTERNAL_MAC' name='$VM1_NAME' ip='$VM1_EXTERNAL_IP'/>
+		</dhcp>
+	</ip>
+</network>"> $SCRPATH'networks/external.xml'
+#---<END: External network template>---
+
+echo "Creating internal.xml..."
+#---<START: Internal network template>---
+echo"<network>
+	<name>${INTERNAL_NET_NAME}</name>
+</network>"> $SCRPATH'networks/internal.xml'
+#---<END: Internal network template>---
+
+echo "Creating management.xml..."
+#---<START: Management network template>---
+echo"<network>
+  <name>${MANAGEMENT_NET_NAME}</name>
+  <ip address='$MANAGEMENT_HOST_IP' netmask='$MANAGEMENT_NET_MASK'/>
+</network>"> $SCRPATH'networks/management.xml'
+#---<END: Management network template>---
+
+echo "Defining networks..."
+virsh net-define $SCRPATH'networks/external.xml'
+virsh net-define $SCRPATH'networks/internal.xml'
+virsh net-define $SCRPATH'networks/management.xml'
+
+echo "Starting networks..."
+virsh net-start external
+virsh net-start internal
+virsh net-start management
+
+echo "Generate instance-id for VM1:"
+VM1_INSTANCE_ID=`uuidgen`        
+echo "VM1_INSTANCE_ID: $VM1_INSTANCE_ID"
+
+echo "Generate instance-id for VM2:"
+VM1_INSTANCE_ID=`uuidgen`        
+echo "VM2_INSTANCE_ID: $VM2_INSTANCE_ID"
+
+echo "Creating VMs meta-data profiles..."
+
+echo"instance-id: $VM1_INSTANCE_ID
+hostname: ${VM1_NAME}
+local-hostname: ${VM1_NAME}
+network-interfaces: |
+	auto ${VM1_EXTERNAL_IF}
+	iface ${VM1_EXTERNAL_IF} inet dhcp
+
+	auto ${VM1_INTERNAL_IF}
+	iface ${VM1_INTERNAL_IF} inet static
+	address ${VM1_INTERNAL_IP}
+	network ${INTERNAL_NET_IP}
+	netmask ${INTERNAL_NET_MASK}
+
+	auto ${VM1_MANAGEMENT_IF}
+	iface ${VM1_MANAGEMENT_IF} inet static
+	address ${VM1_MANAGEMENT_IP}
+	network ${MANAGEMENT_NET_IP}
+	netmask ${MANAGEMENT_NET_MASK}"> $SCRPATH'config-drives/$VM1_NAME-config/meta-data'
+
+echo"instance-id: $VM2_INSTANCE_ID
+hostname: ${VM2_NAME}
+local-hostname: ${VM2_NAME}
+network-interfaces: |
+	auto ${VM2_INTERNAL_IF}
+	iface ${VM2_INTERNAL_IF} inet static
+	address ${VM2_INTERNAL_IP}
+	network ${INTERNAL_NET_IP}
+	netmask ${INTERNAL_NET_MASK}
+	gateway ${VM1_INTERNAL_IP}
+	dns-nameservers ${VM_DNS}
+
+	auto ${VM2_MANAGEMENT_IF}
+	iface ${VM2_MANAGEMENT_IF} inet static
+	address ${VM2_MANAGEMENT_IP}
+	network ${MANAGEMENT_NET_IP}
+	netmask ${MANAGEMENT_NET_MASK}"> $SCRPATH'config-drives/$VM2_NAME-config/meta-data'
