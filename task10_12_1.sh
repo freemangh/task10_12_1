@@ -158,6 +158,9 @@ virsh net-define $INTERNAL_NET_XML
 virsh net-define $MANAGEMENT_NET_XML
 
 echo "Starting networks..."
+virsh net-autostart external
+virsh net-autostart internal
+virsh net-autostart management
 virsh net-start external
 virsh net-start internal
 virsh net-start management
@@ -218,9 +221,11 @@ echo "#cloud-config
 chpasswd: { expire: False }
 password: qwerty
 runcmd:
- - 'ip link add ${VXLAN_IF} type vxlan id ${VID} dev ${VM1_INTERNAL_IF} dstport 0'
- - 'bridge fdb append to 00:00:00:00:00:00 dst ${VM2_INTERNAL_IP} dev ${VXLAN_IF}'
- - 'ip addr add ${VM1_VXLAN_IP}/24 dev ${VXLAN_IF}'
+ - 'ip addr add ${VM1_INTERNAL_IP}/24 dev ${VM1_INTERNAL_IF}'
+ - 'ip link set up dev ${VM1_INTERNAL_IF}'
+ - 'ip addr add ${VM1_MANAGEMENT_IP}/24 dev ${VM1_MANAGEMENT_IF}'
+ - 'ip link set up dev ${VM1_MANAGEMENT_IF}'
+ - 'ip link add ${VXLAN_IF} type vxlan id ${VID} remote ${VM2_INTERNAL_IP} local ${VM1_INTERNAL_IP} dstport 4789'
  - 'ip link set up dev ${VXLAN_IF}'
  - 'sysctl net.ipv4.ip_forward=1'
  - 'iptables -t nat -A POSTROUTING -o ${VM1_EXTERNAL_IF} -j MASQUERADE'
@@ -242,8 +247,12 @@ echo "#cloud-config
 chpasswd: { expire: False }
 password: qwerty
 runcmd:
- - 'ip link add ${VXLAN_IF} type vxlan id ${VID} dev ${VM2_INTERNAL_IF} dstport 0'
- - 'bridge fdb append to 00:00:00:00:00:00 dst ${VM1_INTERNAL_IP} dev ${VXLAN_IF}'
+ - 'ip addr add ${VM2_INTERNAL_IP}/24 dev ${VM2_INTERNAL_IF}'
+ - 'ip link set up dev ${VM2_INTERNAL_IF}'
+ - 'ip route add default via ${VM1_INTERNAL_IP}'
+ - 'ip addr add ${VM2_MANAGEMENT_IP}/24 dev ${VM2_MANAGEMENT_IF}'
+ - 'ip link set up dev ${VM2_MANAGEMENT_IF}'
+ - 'ip link add ${VXLAN_IF} type vxlan id ${VID} remote ${VM1_INTERNAL_IP} local ${VM2_INTERNAL_IP} dstport 4789'
  - 'ip addr add ${VM2_VXLAN_IP}/24 dev ${VXLAN_IF}'
  - 'ip link set up dev ${VXLAN_IF}'
  - 'curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -'
