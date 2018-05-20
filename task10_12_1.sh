@@ -116,7 +116,7 @@ fi
 echo "Creating external.xml..."
 EXTERNAL_NET_XML=$SCRPATH'networks/external.xml'
 #---<START: External network template>---
-echo"<network>
+echo "<network>
 	<name>${EXTERNAL_NET_NAME}</name>
 		<forward mode='nat'>
 			<nat>
@@ -134,8 +134,9 @@ echo"<network>
 
 echo "Creating internal.xml..."
 INTERNAL_NET_XML=$SCRPATH'networks/internal.xml'
+echo "INTERNAL_NET_XML: INTERNAL_NET_XML"
 #---<START: Internal network template>---
-echo"<network>
+echo "<network>
 	<name>${INTERNAL_NET_NAME}</name>
 </network>" > $INTERNAL_NET_XML
 #---<END: Internal network template>---
@@ -143,7 +144,7 @@ echo"<network>
 echo "Creating management.xml..."
 MANAGEMENT_NET_XML=$SCRPATH'networks/management.xml'
 #---<START: Management network template>---
-echo"<network>
+echo "<network>
   <name>${MANAGEMENT_NET_NAME}</name>
   <ip address='$MANAGEMENT_HOST_IP' netmask='$MANAGEMENT_NET_MASK'/>
 </network>" > $MANAGEMENT_NET_XML
