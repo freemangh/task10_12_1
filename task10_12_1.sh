@@ -110,7 +110,7 @@ then
 	echo "Key exists, all Ok!"
 else
 	echo "SSH key doesn't exists, creating it..."
-        ssh-keygen -t rsa -b 2048 -C "khvastunov@gmail.com" -f $HOME/.ssh/id_rsa -q N \"\"
+        ssh-keygen -t rsa -b 2048 -C "khvastunov@gmail.com" -f $HOME/.ssh/id_rsa -q -N \"\"
 fi
 
 echo "Creating external.xml..."
