@@ -289,8 +289,8 @@ echo "<domain type='${VM_VIRT_TYPE}'>
 			<source network='${INTERNAL_NET_NAME}'/>
 			<model type='virtio'/>
 			<protocol family='ipv4'>
-			<ip address="${VM1_INTERNAL_IP}" prefix="24"/>
-			<route gateway="${INTERNAL_NET}.1"/>
+				<ip address='${VM1_INTERNAL_IP}' prefix='24'/>
+				<route gateway='${INTERNAL_NET}.1'/>
 			</protocol>
 		</interface>
 		<interface type='network'>
@@ -334,8 +334,8 @@ echo "<domain type='${VM_VIRT_TYPE}'>
 			<source network='${INTERNAL_NET_NAME}'/>
 			<model type='virtio'/>
 				<protocol family='ipv4'>
-					<ip address="${VM2_INTERNAL_IP}" prefix="24"/>
-					<route gateway="{INTERNAL_NET}.1"/>
+					<ip address='${VM2_INTERNAL_IP}' prefix='24'/>
+					<route gateway='{INTERNAL_NET}.1'/>
 				</protocol>
 		</interface>
 		<interface type='network'>
