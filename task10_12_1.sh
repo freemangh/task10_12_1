@@ -114,6 +114,7 @@ else
 fi
 
 echo "Creating external.xml..."
+EXTERNAL_NET_XML=$SCRPATH'networks/external.xml'
 #---<START: External network template>---
 echo"<network>
 	<name>${EXTERNAL_NET_NAME}</name>
@@ -128,28 +129,30 @@ echo"<network>
 			<host mac='$VM1_EXTERNAL_MAC' name='$VM1_NAME' ip='$VM1_EXTERNAL_IP'/>
 		</dhcp>
 	</ip>
-</network>"> $SCRPATH'networks/external.xml'
+</network>" > $EXTERNAL_NET_XML
 #---<END: External network template>---
 
 echo "Creating internal.xml..."
+INTERNAL_NET_XML=$SCRPATH'networks/internal.xml'
 #---<START: Internal network template>---
 echo"<network>
 	<name>${INTERNAL_NET_NAME}</name>
-</network>"> $SCRPATH'networks/internal.xml'
+</network>" > $INTERNAL_NET_XML
 #---<END: Internal network template>---
 
 echo "Creating management.xml..."
+MANAGEMENT_NET_XML=$SCRPATH'networks/management.xml'
 #---<START: Management network template>---
 echo"<network>
   <name>${MANAGEMENT_NET_NAME}</name>
   <ip address='$MANAGEMENT_HOST_IP' netmask='$MANAGEMENT_NET_MASK'/>
-</network>"> $SCRPATH'networks/management.xml'
+</network>" > $MANAGEMENT_NET_XML
 #---<END: Management network template>---
 
 echo "Defining networks..."
-virsh net-define $SCRPATH'networks/external.xml'
-virsh net-define $SCRPATH'networks/internal.xml'
-virsh net-define $SCRPATH'networks/management.xml'
+virsh net-define $EXTERNAL_NET_XML
+virsh net-define $INTERNAL_NET_XML
+virsh net-define $MANAGEMENT_NET_XML
 
 echo "Starting networks..."
 virsh net-start external
@@ -157,15 +160,14 @@ virsh net-start internal
 virsh net-start management
 
 echo "Generate instance-id for VM1:"
-VM1_INSTANCE_ID=`uuidgen`        
+VM1_INSTANCE_ID=`uuidgen`
 echo "VM1_INSTANCE_ID: $VM1_INSTANCE_ID"
 
 echo "Generate instance-id for VM2:"
-VM1_INSTANCE_ID=`uuidgen`        
+VM2_INSTANCE_ID=`uuidgen`
 echo "VM2_INSTANCE_ID: $VM2_INSTANCE_ID"
 
 echo "Creating VMs meta-data profiles..."
-
 echo"instance-id: $VM1_INSTANCE_ID
 hostname: ${VM1_NAME}
 local-hostname: ${VM1_NAME}
@@ -183,7 +185,7 @@ network-interfaces: |
 	iface ${VM1_MANAGEMENT_IF} inet static
 	address ${VM1_MANAGEMENT_IP}
 	network ${MANAGEMENT_NET_IP}
-	netmask ${MANAGEMENT_NET_MASK}"> $SCRPATH'config-drives/$VM1_NAME-config/meta-data'
+	netmask ${MANAGEMENT_NET_MASK}"> $SCRPATH'config-drives/'$VM1_NAME'-config/meta-data'
 
 echo"instance-id: $VM2_INSTANCE_ID
 hostname: ${VM2_NAME}
@@ -201,4 +203,4 @@ network-interfaces: |
 	iface ${VM2_MANAGEMENT_IF} inet static
 	address ${VM2_MANAGEMENT_IP}
 	network ${MANAGEMENT_NET_IP}
-	netmask ${MANAGEMENT_NET_MASK}"> $SCRPATH'config-drives/$VM2_NAME-config/meta-data'
+	netmask ${MANAGEMENT_NET_MASK}"> $SCRPATH'config-drives/'$VM2_NAME'-config/meta-data'
