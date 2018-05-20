@@ -115,6 +115,7 @@ fi
 
 echo "Creating external.xml..."
 EXTERNAL_NET_XML=$SCRPATH'networks/external.xml'
+echo "EXTERNAL_NET_XML: $EXTERNAL_NET_XML"
 #---<START: External network template>---
 echo "<network>
 	<name>${EXTERNAL_NET_NAME}</name>
@@ -134,7 +135,7 @@ echo "<network>
 
 echo "Creating internal.xml..."
 INTERNAL_NET_XML=$SCRPATH'networks/internal.xml'
-echo "INTERNAL_NET_XML: INTERNAL_NET_XML"
+echo "INTERNAL_NET_XML: $INTERNAL_NET_XML"
 #---<START: Internal network template>---
 echo "<network>
 	<name>${INTERNAL_NET_NAME}</name>
@@ -143,6 +144,7 @@ echo "<network>
 
 echo "Creating management.xml..."
 MANAGEMENT_NET_XML=$SCRPATH'networks/management.xml'
+echo "MANAGEMENT_NET_XML: $MANAGEMENT_NET_XML"
 #---<START: Management network template>---
 echo "<network>
   <name>${MANAGEMENT_NET_NAME}</name>
@@ -168,8 +170,8 @@ echo "Generate instance-id for VM2:"
 VM2_INSTANCE_ID=`uuidgen`
 echo "VM2_INSTANCE_ID: $VM2_INSTANCE_ID"
 
-echo "Creating VMs meta-data profiles..."
-#VM1
+echo "Creating VMs cloud-init meta-data profiles..."
+#---<START: VM1 meta-data template>---
 echo "instance-id: $VM1_INSTANCE_ID
 hostname: ${VM1_NAME}
 local-hostname: ${VM1_NAME}
@@ -188,7 +190,8 @@ network-interfaces: |
 	address ${VM1_MANAGEMENT_IP}
 	network ${MANAGEMENT_NET_IP}
 	netmask ${MANAGEMENT_NET_MASK}"> $SCRPATH'config-drives/'$VM1_NAME'-config/meta-data'
-#VM2
+#---<END: VM1 meta-data template>---
+#---<START: VM2 meta-data template>---
 echo "instance-id: $VM2_INSTANCE_ID
 hostname: ${VM2_NAME}
 local-hostname: ${VM2_NAME}
@@ -206,10 +209,10 @@ network-interfaces: |
 	address ${VM2_MANAGEMENT_IP}
 	network ${MANAGEMENT_NET_IP}
 	netmask ${MANAGEMENT_NET_MASK}"> $SCRPATH'config-drives/'$VM2_NAME'-config/meta-data'
+#---<END: VM2 meta-data template>---
 
-
-echo "Creating VMs user-data profiles..."
-#VM1
+echo "Creating VMs cloud-init user-data profiles..."
+#---<START: VM1 user-data template>---
 echo "#cloud-config
 chpasswd: { expire: False }
 password: qwerty
@@ -232,7 +235,8 @@ package_upgrade: false
 ssh_authorized_keys:
  - " > $SCRPATH'config-drives/'$VM1_NAME'-config/user-data'
 cat $SSH_PUB_KEY >> $SCRPATH'config-drives/'$VM1_NAME'-config/user-data'
-#VM2
+#---<END: VM1 user-data template>---
+#---<START: VM2 user-data template>---
 echo "#cloud-config
 chpasswd: { expire: False }
 password: qwerty
@@ -251,3 +255,105 @@ package_upgrade: false
 ssh_authorized_keys:
  - " > $SCRPATH'config-drives/'$VM2_NAME'-config/user-data'
 cat $SSH_PUB_KEY >> $SCRPATH'config-drives/'$VM2_NAME'-config/user-data'
+#---<END: VM2 user-data template>---
+
+echo "Creating VMs XML profiles from temlpates..."
+#---<START: VM1 config template>---
+echo "<domain type='${VM_VIRT_TYPE}'>
+	<name>vm1</name>
+	<memory unit='MiB'>${VM1_MB_RAM}</memory>
+	<vcpu placement='static'>${VM1_NUM_CPU}</vcpu>
+	<os>
+		<type>${VM_TYPE}</type>
+		<boot dev='hd'/>
+	</os>
+	<devices>
+		<disk type='file' device='disk'>
+			<driver name='qemu' type='qcow2'/>
+			<source file='${VM1_HDD}'/>
+			<target dev='vda' bus='virtio'/>
+		</disk>
+		<disk type='file' device='cdrom'>
+			<driver name='qemu' type='raw'/>
+			<source file='${VM1_CONFIG_ISO}'/>
+			<target dev='hdc' bus='ide'/>
+			<readonly/>
+		</disk>
+		<interface type='network'>
+			<mac address='${VM1_EXTERNAL_MAC}'/>
+			<source network='${EXTERNAL_NET_NAME}'/>
+			<model type='virtio'/>
+		</interface>
+		<interface type='network'>
+			<source network='${INTERNAL_NET_NAME}'/>
+			<model type='virtio'/>
+			<protocol family='ipv4'>
+			<ip address="${VM1_INTERNAL_IP}" prefix="24"/>
+			<route gateway="${INTERNAL_NET}.1"/>
+			</protocol>
+		</interface>
+		<interface type='network'>
+			<source network='${MANAGEMENT_NET_NAME}'/>
+			<model type='virtio'/>
+		</interface>
+		<serial type='pty'>
+			<source path='/dev/pts/0'/>
+			<target port='0'/>
+		</serial>
+		<console type='pty' tty='/dev/pts/0'>
+			<source path='/dev/pts/0'/>
+			<target type='serial' port='0'/>
+		</console>
+		<graphics type='vnc' port='-1' autoport='yes'/>
+	</devices>
+</domain>" > $SCRPATHvm1.xml
+#---<END: VM1 config template>---
+#---<START: VM2 config template>---
+echo "<domain type='${VM_VIRT_TYPE}'>
+	<name>${VM2_NAME}</name>
+	<memory unit='MiB'>${VM2_MB_RAM}</memory>
+	<vcpu placement='static'>${VM2_NUM_CPU}</vcpu>
+	<os>
+		<type>${VM_TYPE}</type>
+		<boot dev='hd'/>
+	</os>
+	<devices>
+		<disk type='file' device='disk'>
+			<driver name='qemu' type='qcow2'/>
+			<source file='${VM2_HDD}'/>
+			<target dev='vda' bus='virtio'/>
+		</disk>
+		<disk type='file' device='cdrom'>
+			<driver name='qemu' type='raw'/>
+			<source file='${VM2_CONFIG_ISO}'/>
+			<target dev='hdc' bus='ide'/>
+			<readonly/>
+		</disk>
+		<interface type='network'>
+			<source network='${INTERNAL_NET_NAME}'/>
+			<model type='virtio'/>
+				<protocol family='ipv4'>
+					<ip address="${VM2_INTERNAL_IP}" prefix="24"/>
+					<route gateway="{INTERNAL_NET}.1"/>
+				</protocol>
+		</interface>
+		<interface type='network'>
+			<source network='${MANAGEMENT_NET_NAME}'/>
+			<model type='virtio'/>
+		</interface>
+		<serial type='pty'>
+			<source path='/dev/pts/0'/>
+			<target port='0'/>
+		</serial>
+		<console type='pty' tty='/dev/pts/0'>
+			<source path='/dev/pts/0'/>
+			<target type='serial' port='0'/>
+		</console>
+		<graphics type='vnc' port='-1' autoport='yes'/>
+	</devices>
+</domain>" > $SCRPATHvm2.xml
+#---<END: VM2 config template>---
+
+echo "Creating config-drives"
+mkisofs -o "$VM1_CONFIG_ISO" -V cidata -r -J $SCRPATH'config-drives/vm1-config'
+genisoimage -output "$VM2_CONFIG_ISO" -volid cidata -joliet -rock $SCRPATH'config-drives/vm2-config'
