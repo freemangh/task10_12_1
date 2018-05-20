@@ -169,7 +169,7 @@ VM2_INSTANCE_ID=`uuidgen`
 echo "VM2_INSTANCE_ID: $VM2_INSTANCE_ID"
 
 echo "Creating VMs meta-data profiles..."
-echo"instance-id: $VM1_INSTANCE_ID
+echo "instance-id: $VM1_INSTANCE_ID
 hostname: ${VM1_NAME}
 local-hostname: ${VM1_NAME}
 network-interfaces: |
@@ -188,7 +188,7 @@ network-interfaces: |
 	network ${MANAGEMENT_NET_IP}
 	netmask ${MANAGEMENT_NET_MASK}"> $SCRPATH'config-drives/'$VM1_NAME'-config/meta-data'
 
-echo"instance-id: $VM2_INSTANCE_ID
+echo "instance-id: $VM2_INSTANCE_ID
 hostname: ${VM2_NAME}
 local-hostname: ${VM2_NAME}
 network-interfaces: |
