@@ -221,6 +221,9 @@ echo "#cloud-config
 chpasswd: { expire: False }
 password: qwerty
 runcmd:
+ - 'hostname ${VM1_NAME}'
+ - 'echo ${VM1_NAME} > /etc/hostname'
+ - 'echo ${VM1_NAME} >> /etc/hosts'
  - 'echo nameserver ${VM_DNS} >> /etc/resolv.conf'
  - 'ip addr add ${VM1_INTERNAL_IP}/24 dev ${VM1_INTERNAL_IF}'
  - 'ip link set up dev ${VM1_INTERNAL_IF}'
@@ -249,6 +252,9 @@ echo "#cloud-config
 chpasswd: { expire: False }
 password: qwerty
 runcmd:
+ - 'hostname ${VM2_NAME}'
+ - 'echo ${VM2_NAME} > /etc/hostname'
+ - 'echo ${VM2_NAME} >> /etc/hosts'
  - 'echo nameserver ${VM_DNS} >> /etc/resolv.conf'
  - 'ip addr add ${VM2_INTERNAL_IP}/24 dev ${VM2_INTERNAL_IF}'
  - 'ip link set up dev ${VM2_INTERNAL_IF}'
