@@ -212,6 +212,7 @@ network-interfaces: |
 #---<END: VM2 meta-data template>---
 
 echo "Creating VMs cloud-init user-data profiles..."
+SSH_P_K=`cat $SSH_PUB_KEY`
 #---<START: VM1 user-data template>---
 echo "#cloud-config
 chpasswd: { expire: False }
@@ -226,15 +227,15 @@ runcmd:
  - 'iptables -A FORWARD -i ${VM1_INTERNAL_IF} -o ${VM1_EXTERNAL_IF} -j ACCEPT'
  - 'iptables -A FORWARD -i ${VM1_EXTERNAL_IF} -o ${VM1_INTERNAL_IF} -j ACCEPT'
  - 'curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -'
- - 'sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"'
+ - 'sudo add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\"'
  - 'sudo apt-get update'
  - 'sudo apt-get install docker-ce docker-compose -y'
 
 package_upgrade: false
 
 ssh_authorized_keys:
- - " > $SCRPATH'config-drives/'$VM1_NAME'-config/user-data'
-cat $SSH_PUB_KEY >> $SCRPATH'config-drives/'$VM1_NAME'-config/user-data'
+ - $SSH_P_K" > $SCRPATH'config-drives/'$VM1_NAME'-config/user-data'
+#cat $SSH_PUB_KEY >> $SCRPATH'config-drives/'$VM1_NAME'-config/user-data'
 #---<END: VM1 user-data template>---
 #---<START: VM2 user-data template>---
 echo "#cloud-config
@@ -253,8 +254,8 @@ runcmd:
 package_upgrade: false
 
 ssh_authorized_keys:
- - " > $SCRPATH'config-drives/'$VM2_NAME'-config/user-data'
-cat $SSH_PUB_KEY >> $SCRPATH'config-drives/'$VM2_NAME'-config/user-data'
+ - $SSH_P_K" > $SCRPATH'config-drives/'$VM2_NAME'-config/user-data'
+#cat $SSH_PUB_KEY >> $SCRPATH'config-drives/'$VM2_NAME'-config/user-data'
 #---<END: VM2 user-data template>---
 
 echo "Creating VMs XML profiles from temlpates..."
