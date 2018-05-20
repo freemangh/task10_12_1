@@ -106,8 +106,8 @@ echo "VM1_EXTERNAL_MAC: $VM1_EXTERNAL_MAC"
 echo "Check if SSH key exists"
 if [ -e $SSH_PUB_KEY ]
 then 
-	echo "SSH key exists"
+	echo "Key exists, all Ok!"
 else
-	echo "SSH key doesn't exists"
-        exit 1
+	echo "SSH key doesn't exists, creating it..."
+        ssh-keygen -t rsa -b 2048 -C "khvastunov@gmail.com" -f $HOME/.ssh/id_rsa
 fi
