@@ -169,6 +169,7 @@ VM2_INSTANCE_ID=`uuidgen`
 echo "VM2_INSTANCE_ID: $VM2_INSTANCE_ID"
 
 echo "Creating VMs meta-data profiles..."
+#VM1
 echo "instance-id: $VM1_INSTANCE_ID
 hostname: ${VM1_NAME}
 local-hostname: ${VM1_NAME}
@@ -187,7 +188,7 @@ network-interfaces: |
 	address ${VM1_MANAGEMENT_IP}
 	network ${MANAGEMENT_NET_IP}
 	netmask ${MANAGEMENT_NET_MASK}"> $SCRPATH'config-drives/'$VM1_NAME'-config/meta-data'
-
+#VM2
 echo "instance-id: $VM2_INSTANCE_ID
 hostname: ${VM2_NAME}
 local-hostname: ${VM2_NAME}
@@ -205,3 +206,48 @@ network-interfaces: |
 	address ${VM2_MANAGEMENT_IP}
 	network ${MANAGEMENT_NET_IP}
 	netmask ${MANAGEMENT_NET_MASK}"> $SCRPATH'config-drives/'$VM2_NAME'-config/meta-data'
+
+
+echo "Creating VMs user-data profiles..."
+#VM1
+echo "#cloud-config
+chpasswd: { expire: False }
+password: qwerty
+runcmd:
+ - 'ip link add ${VXLAN_IF} type vxlan id ${VID} dev ${VM1_INTERNAL_IF} dstport 0'
+ - 'bridge fdb append to 00:00:00:00:00:00 dst ${VM2_INTERNAL_IP} dev ${VXLAN_IF}'
+ - 'ip addr add ${VM1_VXLAN_IP}/24 dev ${VXLAN_IF}'
+ - 'ip link set up dev ${VXLAN_IF}'
+ - 'sysctl net.ipv4.ip_forward=1'
+ - 'iptables -t nat -A POSTROUTING -o ${VM1_EXTERNAL_IF} -j MASQUERADE'
+ - 'iptables -A FORWARD -i ${VM1_INTERNAL_IF} -o ${VM1_EXTERNAL_IF} -j ACCEPT'
+ - 'iptables -A FORWARD -i ${VM1_EXTERNAL_IF} -o ${VM1_INTERNAL_IF} -j ACCEPT'
+ - 'curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -'
+ - 'sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"'
+ - 'sudo apt-get update'
+ - 'sudo apt-get install docker-ce docker-compose -y'
+
+package_upgrade: false
+
+ssh_authorized_keys:
+ - " > $SCRPATH'config-drives/'$VM1_NAME'-config/user-data'
+cat $SSH_PUB_KEY >> $SCRPATH'config-drives/'$VM1_NAME'-config/user-data'
+#VM2
+echo "#cloud-config
+chpasswd: { expire: False }
+password: qwerty
+runcmd:
+ - 'ip link add ${VXLAN_IF} type vxlan id ${VID} dev ${VM2_INTERNAL_IF} dstport 0'
+ - 'bridge fdb append to 00:00:00:00:00:00 dst ${VM1_INTERNAL_IP} dev ${VXLAN_IF}'
+ - 'ip addr add ${VM2_VXLAN_IP}/24 dev ${VXLAN_IF}'
+ - 'ip link set up dev ${VXLAN_IF}'
+ - 'curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -'
+ - 'sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"'
+ - 'sudo apt-get update'
+ - 'sudo apt-get install docker-ce docker-compose -y'
+
+package_upgrade: false
+
+ssh_authorized_keys:
+ - " > $SCRPATH'config-drives/'$VM2_NAME'-config/user-data'
+cat $SSH_PUB_KEY >> $SCRPATH'config-drives/'$VM2_NAME'-config/user-data'
