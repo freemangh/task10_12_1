@@ -221,11 +221,13 @@ echo "#cloud-config
 chpasswd: { expire: False }
 password: qwerty
 runcmd:
+ - 'echo nameserver ${VM_DNS} >> /etc/resolv.conf'
  - 'ip addr add ${VM1_INTERNAL_IP}/24 dev ${VM1_INTERNAL_IF}'
  - 'ip link set up dev ${VM1_INTERNAL_IF}'
  - 'ip addr add ${VM1_MANAGEMENT_IP}/24 dev ${VM1_MANAGEMENT_IF}'
  - 'ip link set up dev ${VM1_MANAGEMENT_IF}'
  - 'ip link add ${VXLAN_IF} type vxlan id ${VID} remote ${VM2_INTERNAL_IP} local ${VM1_INTERNAL_IP} dstport 4789'
+ - 'ip addr add ${VM1_VXLAN_IP}/24 dev ${VXLAN_IF}'
  - 'ip link set up dev ${VXLAN_IF}'
  - 'sysctl net.ipv4.ip_forward=1'
  - 'iptables -t nat -A POSTROUTING -o ${VM1_EXTERNAL_IF} -j MASQUERADE'
@@ -247,6 +249,7 @@ echo "#cloud-config
 chpasswd: { expire: False }
 password: qwerty
 runcmd:
+ - 'echo nameserver ${VM_DNS} >> /etc/resolv.conf'
  - 'ip addr add ${VM2_INTERNAL_IP}/24 dev ${VM2_INTERNAL_IF}'
  - 'ip link set up dev ${VM2_INTERNAL_IF}'
  - 'ip route add default via ${VM1_INTERNAL_IP}'
